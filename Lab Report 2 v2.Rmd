@@ -1,0 +1,58 @@
+---
+title: 'Lab Report #2'
+author: 'Lab Section C3: Yijia Liu, Stephanie Pan, Mohish Agrawal, Daniel Shen, Rashid Mammadov'
+date: "10/2/2020"
+output: word_document
+---
+
+```{r setup, message=FALSE, include=TRUE}
+# Load packages
+library(tidyverse) # includes dplyr and ggplot2
+library(ggplot2)
+library(hrbrthemes)
+library(GGally)
+library(weathermetrics)
+
+# Load dataset
+setwd("C:/Users/steph/Documents/Fall 2020 Semester/MA575 Linear Models/Lab/Group Project/Bike-Sharing-Dataset")
+dailydat <- read.csv("day.csv",header=TRUE)
+
+# Convert original temperature variable to Fahrenheit
+dailydat$newtemp <- dailydat$temp*41
+dailydat$tempfah <- celsius.to.fahrenheit(dailydat$newtemp, round = 2)
+attach(dailydat)
+```
+
+### Question 1
+For our bike sharing project, we are interested in assessing the relationship between weather patterns and the number of riders. In this report, we will be focusing on temperature as our covariate of interest (X) and the number of daily casual riders as our response (Y). We will be including observations from both years (2011 and 2012) in our dataset.
+
+### Question 2
+We plotted below a scatterplot of our data, with the daily casual riders on the Y-axis and temperature (Fahrenheit) on the X-axis. Visually we can see that as temperature increases we have a slightly higher number of daily casual bike riders. 
+```{r , echo=TRUE}
+ggplot(dailydat, aes(y=casual,x=tempfah)) + geom_point(size=1) + xlab("Temperature (Fahrenheit)") + ylab("Number of Daily Casual Riders")
+```
+
+### Question 3
+We performed an ordinary least squares (OLS) regression model using the daily casual number of riders as our response and temperature (in Fahrenheit) as our covariate. 
+```{r , echo=TRUE}
+# Fit the OLS model for Y=casual riders, X=temperature (F) using all of the observations in our daily dataset
+dailymodel <- lm(data=dailydat, casual~tempfah)
+```
+
+### Question 4
+We provided the summary output from our model below. The coefficient estimates for the intercept is -1044.97 (95% CI -1261.77 to -828.16) and the estimate for the temperature is 27.61 (95%CI 24.51 to 30.72). In this instance, if we set the temperature (Fahrenheit) to 0, on average, we would expect the number of daily casual riders to be -1044.97; this would not be interpretable in the context of this setting since we cannot have a negative number of casual riders. For each degree increase, we would anticipate on average an increase of 27.61 daily casual riders. Based on the critical t-value and corresponding p-value we have evidence at a significance level of 0.05 that temperature is positively associated with the number of daily casual riders (p<0.001). 
+```{r , echo=TRUE}
+summary(dailymodel)
+round(confint(dailymodel,level=0.95),6)
+vcov(dailymodel)          #covariance matrix
+
+```
+
+### Question 5
+Is this a good model?
+
+```{r , echo=TRUE}
+dailydat$predlm <- predict(dailymodel,type="response")
+ggplot(dailydat, aes(y=casual,x=tempfah)) + geom_point(size=1) +xlab("Temperature (Fahrenheit)") + 
+  ylab("Number of Daily Casual Riders") + geom_line(aes(y=predlm), color="blue")
+```
